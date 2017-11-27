@@ -5,20 +5,22 @@ import os
 
 dir = os.getcwd()
 
-def test_pil():  
+#通过相对路径读取图片
+def pick_image(relative_path):
+    #计算绝对位置
+    loc=dir+relative_path
+    #读取img
+    im = Image.open(loc)
+    #转换成Matrix
+    width,height = im.size
+    im = im.convert("L")
+    raw_data = im.getdata()
+    #normal操作
+    raw_data = np.matrix(raw_data,dtype = 'float')/255.0
+    #np 转换成矩阵
+    shape_data = np.reshape(raw_data,(width,height))
+    return shape_data
 
-    #读取图像  
-    im = Image.open(dir+"/dataset/1.png")  
-    #显示图像  
-    im.show()  
-  
-    #转换成灰度图像  
-    im_gray = im.convert("L")  
-    im_gray.show()  
-  
-    #保存图像  
-    im_gray.save("/data/image_gray.jpg")  
-  
-    return 
-
-test_pil()
+#usage
+#shaped = pick_image('/dataset/1.png')
+#print(shaped)
