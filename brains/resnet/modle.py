@@ -75,17 +75,17 @@ class ResNet(object):
   #构建残差模型
   def _build_model(self):
     """Build the core model within the graph."""
-    with tf.variable_scope('init'):
+    with tf.variable_scope('init'): #init层将图片的3通道变为16通道feature map输出
       x = self._images
       x = self._conv('init_conv', x, 3, 3, 16, self._stride_arr(1))
 
-    strides = [1, 2, 2]
+    strides = [1, 2, 2]  #后面两个2的stride用来降采样
     activate_before_residual = [True, False, False]
     if self.hps.use_bottleneck:
-      res_func = self._bottleneck_residual
+      res_func = self._bottleneck_residual #bottleneck结构，包含三个卷积子层
       filters = [16, 64, 128, 256]
     else:
-      res_func = self._residual
+      res_func = self._residual #非bottleneck结构（包含两个3*3的卷积子层）
       filters = [16, 16, 32, 64]
       # Uncomment the following codes to use w28-10 wide residual network.
       # It is more memory efficient than very deep residual network and has
@@ -97,7 +97,7 @@ class ResNet(object):
     with tf.variable_scope('unit_1_0'):
       x = res_func(x, filters[0], filters[1], self._stride_arr(strides[0]),
                    activate_before_residual[0])
-    for i in six.moves.range(1, self.hps.num_residual_units):
+    for i in six.moves.range(1, self.hps.num_residual_units): #可以看到这里num_residual_units决定了一个unit下面包含几个block
       with tf.variable_scope('unit_1_%d' % i):
         x = res_func(x, filters[1], filters[1], self._stride_arr(1), False)
 
@@ -115,22 +115,22 @@ class ResNet(object):
       with tf.variable_scope('unit_3_%d' % i):
         x = res_func(x, filters[3], filters[3], self._stride_arr(1), False)
 
-    with tf.variable_scope('unit_last'):
+    with tf.variable_scope('unit_last'): #卷积完成之后有一个全局Pooling层
       x = self._batch_norm('final_bn', x)
       x = self._relu(x, self.hps.relu_leakiness)
       x = self._global_avg_pool(x)
 
     with tf.variable_scope('logit'):
-      logits = self._fully_connected(x, self.hps.num_classes)
-      self.predictions = tf.nn.softmax(logits)
+      logits = self._fully_connected(x, self.hps.num_classes) #全连接层输出
+      self.predictions = tf.nn.softmax(logits) #Softmax分类输出结果
 
     with tf.variable_scope('costs'):
       xent = tf.nn.softmax_cross_entropy_with_logits(
-          logits=logits, labels=self.labels)
+          logits=logits, labels=self.labels)  #损失函数采用的Softmax交叉熵的形式
       self.cost = tf.reduce_mean(xent, name='xent')
       self.cost += self._decay()
 
-      tf.summary.scalar('cost', self.cost)
+      tf.summary.scalar('cost', self.cost) #summary收集信息用于tensorboard的可视化显示
 
   #构建训练优化策略
   def _build_train_op(self):
