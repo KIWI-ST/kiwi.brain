@@ -1,3 +1,6 @@
+#save 模型示例
+#http://blog.csdn.net/thriving_fcl/article/details/71423039
+
 import time
 import six
 import sys
@@ -94,7 +97,7 @@ def evaluate(hps):
   sess = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
   tf.train.start_queue_runners(sess)
   best_precision = 0.0
-  
+
   while True:
     try:
       ckpt_state = tf.train.get_checkpoint_state(FLAGS.log_root)
