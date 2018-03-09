@@ -1,11 +1,11 @@
 import tensorflow as tf
 
 #宽度
-width = 32
+WIDTH = 8
 #高度
-height = 32
+HEIGHT = 8
 #单层灰度图
-depth = 1
+DEPTH = 1
 #默认label集
 num_classes = 10
 #默认label byte长度
@@ -13,71 +13,63 @@ label_bytes = 1
 #label offset byte长度
 label_offset = 0
 
+#乱序提取部分样本
+def num_examples_per_epoch(subset='train'):
+    if subset == 'train':
+      return 3000
+    elif subset == 'validation':
+      return 600
+    elif subset == 'eval':
+      return 600
+    else:
+      raise ValueError('Invalid data subset "%s"' % subset)
+
+def preprocess(image):
+  """预处理一个图像，按照[height, width, depth]组织""" 
+  image = tf.image.resize_image_with_crop_or_pad(image, 40, 40)
+  image = tf.random_crop(image, [HEIGHT, WIDTH, DEPTH])
+  image = tf.image.random_flip_left_right(image)
+  return image
+
+def parser(serialized_example):
+  """逐个转换example"""
+  features = tf.parse_single_example(
+    serialized_example,
+    features={
+       'image': tf.FixedLenFeature([], tf.string),
+       'label': tf.FixedLenFeature([], tf.int64),
+    })
+  image = tf.decode_raw(features['image'], tf.uint8)
+  image.set_shape([DEPTH * HEIGHT * WIDTH])
+  image = tf.cast(tf.transpose(tf.reshape(image, [DEPTH, HEIGHT, WIDTH]), [1, 2, 0]),tf.float32)
+  label = tf.cast(features['label'], tf.int32)
+  image = preprocess(image)
+  return image,label
+
+
 # data_path -> records文件路径
 # batch_size -> 批尺寸，即学习一次使用的数据集中数据个数
 # num_classes -> label大小，如分为10类 num_classes = 10
 # mode -> train or eval,设置样本是训练集还是测试集
 def build_input(data_path, batch_size, num_classes, mode):
-  #图片byet长度
-  image_bytes = width * height * depth
-  #record的总长度
-  record_bytes = label_bytes + label_offset + image_bytes
-  #数据读取
-  data_files = tf.gfile.Glob(data_path)
-  #根据文件名生成一个队列
-  file_queue = tf.train.string_input_producer(data_files, shuffle=True)
-  #读取样本
-  reader = tf.FixedLengthRecordReader(record_bytes=record_bytes)
-  _, value = reader.read(file_queue)
-  #样本处理
-  record = tf.reshape(tf.decode_raw(value, tf.uint8), [record_bytes])
-  #样本标注
-  label = tf.cast(tf.slice(record, [label_offset], [label_bytes]), tf.int32)
-  #转换[width*height*depth] -> [depth,width,height]
-  depth_major = tf.reshape(tf.slice(record, [label_offset + label_bytes], [image_bytes]),[depth, width, height])
-  #转换 [depth, height, width] -> [height, width, depth].
-  image = tf.cast(tf.transpose(depth_major, [1, 2, 0]), tf.float32)
+  #读取dataset
+  dataset = tf.data.TFRecordDataset(data_path)
+  dataset = dataset.map(parser)
   #处理train样本集
   if mode == 'train':
-    image = tf.image.resize_image_with_crop_or_pad(image, width + 4, height + 4)
-    image = tf.random_crop(image, [width, height, 3])
-    image = tf.image.random_flip_left_right(image)
-    # Brightness/saturation/constrast provides small gains .2%~.5% on cifar.
-    # image = tf.image.random_brightness(image, max_delta=63. / 255.)
-    # image = tf.image.random_saturation(image, lower=0.5, upper=1.5)
-    # image = tf.image.random_contrast(image, lower=0.2, upper=1.8)
-    image = tf.image.per_image_standardization(image)
-    #构建训练样本
-    example_queue = tf.RandomShuffleQueue(
-        capacity=16 * batch_size,
-        min_after_dequeue=8 * batch_size,
-        dtypes=[tf.float32, tf.int32],
-        shapes=[[width, height, depth], [1]])
-    num_threads = 16
-  else:
-    image = tf.image.resize_image_with_crop_or_pad(image, width, height)
-    image = tf.image.per_image_standardization(image)
-    #构建测试样本
-    example_queue = tf.FIFOQueue(
-        3 * batch_size,
-        dtypes=[tf.float32, tf.int32],
-        shapes=[[width, height, depth], [1]])
-    num_threads = 1
-  #图操作
-  example_enqueue_op = example_queue.enqueue([image, label])
-  tf.train.add_queue_runner(tf.train.queue_runner.QueueRunner(example_queue, [example_enqueue_op] * num_threads))
-  #读取image和labels
-  images, labels = example_queue.dequeue_many(batch_size)
-  labels = tf.reshape(labels, [batch_size, 1])
-  indices = tf.reshape(tf.range(0, batch_size, 1), [batch_size, 1])
-  labels = tf.sparse_to_dense(tf.concat(values=[indices, labels], axis=1),[batch_size, num_classes], 1.0, 0.0)
-  #验证数据集
-  assert len(images.get_shape()) == 4
-  assert images.get_shape()[0] == batch_size
-  assert images.get_shape()[-1] == 3
-  assert len(labels.get_shape()) == 2
-  assert labels.get_shape()[0] == batch_size
-  assert labels.get_shape()[1] == num_classes
-  # Display the training images in the visualizer.
-  tf.summary.image('images', images)
-  return images, labels
+    #预计数量*0.4构建随机乱序batch
+    min_queue_examples= int(num_examples_per_epoch(mode)*0.4)
+    #确保整体容量能够生成较为优质的batch
+    dataset = dataset.shuffle(buffer_size=min_queue_examples + 3 * batch_size)
+  #打包
+  dataset = dataset.batch(batch_size)
+  #构建迭代tesnor
+  iterator = dataset.make_one_shot_iterator()
+  #获取图片tensor和标注tensor
+  image_batch, label_batch = iterator.get_next()
+  #返回tensor
+  return image_batch, label_batch
+
+if __name__ == '__main__':
+  train = 'D:/Workspace/train/train.tfrecords'
+  build_input(train,10,100,'train')

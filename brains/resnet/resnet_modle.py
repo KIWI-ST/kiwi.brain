@@ -125,8 +125,7 @@ class ResNet(object):
       self.predictions = tf.nn.softmax(logits) #Softmax分类输出结果
 
     with tf.variable_scope('costs'):
-      xent = tf.nn.softmax_cross_entropy_with_logits(
-          logits=logits, labels=self.labels)  #损失函数采用的Softmax交叉熵的形式
+      xent = tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=self.labels)  #损失函数采用的Softmax交叉熵的形式
       self.cost = tf.reduce_mean(xent, name='xent')
       self.cost += self._decay()
 
@@ -146,9 +145,7 @@ class ResNet(object):
     elif self.hps.optimizer == 'mom':
       optimizer = tf.train.MomentumOptimizer(self.lrn_rate, 0.9)
 
-    apply_op = optimizer.apply_gradients(
-        zip(grads, trainable_variables),
-        global_step=self.global_step, name='train_step')
+    apply_op = optimizer.apply_gradients(zip(grads, trainable_variables),global_step=self.global_step, name='train_step')
 
     train_ops = [apply_op] + self._extra_train_ops
     self.train_op = tf.group(*train_ops)
@@ -158,13 +155,8 @@ class ResNet(object):
     """Batch normalization."""
     with tf.variable_scope(name):
       params_shape = [x.get_shape()[-1]]
-
-      beta = tf.get_variable(
-          'beta', params_shape, tf.float32,
-          initializer=tf.constant_initializer(0.0, tf.float32))
-      gamma = tf.get_variable(
-          'gamma', params_shape, tf.float32,
-          initializer=tf.constant_initializer(1.0, tf.float32))
+      beta = tf.get_variable('beta', params_shape, tf.float32,initializer=tf.constant_initializer(0.0, tf.float32))
+      gamma = tf.get_variable('gamma', params_shape, tf.float32,initializer=tf.constant_initializer(1.0, tf.float32))
 
       if self.mode == 'train':
         mean, variance = tf.nn.moments(x, [0, 1, 2], name='moments')
