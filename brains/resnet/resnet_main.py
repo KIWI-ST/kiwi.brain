@@ -12,15 +12,17 @@ import resnet_input
 
 #设置参数
 FLAGS = tf.app.flags.FLAGS
+#
 tf.app.flags.DEFINE_string('num_classes','10','label类型长度')
 tf.app.flags.DEFINE_string('mode', 'train', 'train训练，eval测试')
 tf.app.flags.DEFINE_string('train_data_path', '','train.records地址')
 tf.app.flags.DEFINE_string('eval_data_path', '','eval.records地址')
-tf.app.flags.DEFINE_integer('width', 32, '图片宽度')
-tf.app.flags.DEFINE_integer('height', 32, '图片高度')
-tf.app.flags.DEFINE_string('train_dir', '','Directory to keep training outputs.')
-tf.app.flags.DEFINE_string('eval_dir', '','Directory to keep eval outputs.')
-tf.app.flags.DEFINE_integer('eval_batch_count', 50,'Number of batches to eval.')
+tf.app.flags.DEFINE_integer('width', 8, '图片宽度')
+tf.app.flags.DEFINE_integer('height', 8, '图片高度')
+tf.app.flags.DEFINE_integer('depth', 1, '通道')
+tf.app.flags.DEFINE_string('train_dir', '','训练输出')
+tf.app.flags.DEFINE_string('eval_dir', '','验证输出')
+tf.app.flags.DEFINE_integer('eval_batch_count', 50,'验证机一批样本数量')
 tf.app.flags.DEFINE_bool('eval_once', False,'Whether evaluate the model only once.')
 tf.app.flags.DEFINE_string('log_root', '','Directory to keep the checkpoints. Should be a ''parent directory of FLAGS.train_dir/eval_dir.')
 tf.app.flags.DEFINE_integer('num_gpus', 0, 'Number of gpus used for training. (0 or 1)')

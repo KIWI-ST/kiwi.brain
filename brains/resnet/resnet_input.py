@@ -70,6 +70,14 @@ def build_input(data_path, batch_size, num_classes, mode):
   #返回tensor
   return image_batch, label_batch
 
+#example
 if __name__ == '__main__':
-  train = 'D:/Workspace/train/train.tfrecords'
-  build_input(train,10,100,'train')
+  train = 'workspace/train.tfrecords'
+  image_bacth,label_batch = build_input(train,10,100,'train')
+  sess = tf.Session()
+  #使用session测试读取结果
+  with sess.as_default():
+   print(sess.run(image_bacth))
+   print(sess.run(label_batch))  
+
+
