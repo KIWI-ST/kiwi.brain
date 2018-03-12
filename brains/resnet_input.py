@@ -57,9 +57,9 @@ class ResnetInput(object):
   def make_batch(self, batch_size):
     filenames = self.get_filenames()
     #读取dataset
-    dataset = tf.contrib.data.TFRecordDataset(filenames).repeat()
+    dataset = tf.data.TFRecordDataset(filenames).repeat()
     #循环读取
-    dataset = dataset.map(self.parser, num_threads=batch_size, output_buffer_size=2 * batch_size)
+    dataset = dataset.map(self.parser)
     #处理train样本集
     if self.subset == 'train':
       #预计数量*0.4构建随机乱序batch
@@ -79,10 +79,11 @@ class ResnetInput(object):
 if __name__ == '__main__':
   train = 'workspace/'
   input = ResnetInput(data_dir=train, image_width = 10, image_height =10, image_depth=1)
-  image_bacth,label_bacth1 =  input.make_batch(2)
-
-  labels = tf.one_hot(indices=tf.cast(label_bacth1, tf.int32), depth=12)
-
+  image_bacth,label_bacth1 =  input.make_batch(11)
+  #label_bacth1 = tf.reshape(label_bacth1,[1,])
+  labels =tf.one_hot(tf.cast(label_bacth1, tf.int32), 11)
+  lableConstant = tf.constant([5,2,3,1,4,2,1,5,6,7,10])
+  labels2 = tf.one_hot(lableConstant,11)
   #使用session测试读取结果
   with tf.Session() as sess:
     #print(run_image_bacth)
@@ -90,3 +91,5 @@ if __name__ == '__main__':
     sess.run(labels)
     print(sess.run(label_bacth1))
     print(sess.run(labels))
+    print(sess.run(lableConstant))
+    print(sess.run(labels2))
