@@ -1,4 +1,6 @@
 import tensorflow as tf
+# import tensorflow.contrib.eager as tfe
+# tfe.enable_eager_execution()
 
 #宽度
 WIDTH = 8
@@ -6,21 +8,15 @@ WIDTH = 8
 HEIGHT = 8
 #单层灰度图
 DEPTH = 1
-#默认label集
-num_classes = 10
-#默认label byte长度
-label_bytes = 1
-#label offset byte长度
-label_offset = 0
 
 #乱序提取部分样本
 def num_examples_per_epoch(subset='train'):
     if subset == 'train':
-      return 3000
+      return 45000
     elif subset == 'validation':
-      return 600
+      return 5000
     elif subset == 'eval':
-      return 600
+      return 10000
     else:
       raise ValueError('Invalid data subset "%s"' % subset)
 
@@ -71,13 +67,22 @@ def build_input(data_path, batch_size, num_classes, mode):
   return image_batch, label_batch
 
 #example
-if __name__ == '__main__':
-  train = 'workspace/train.tfrecords'
-  image_bacth,label_batch = build_input(train,10,100,'train')
-  sess = tf.Session()
-  #使用session测试读取结果
-  with sess.as_default():
-   print(sess.run(image_bacth))
-   print(sess.run(label_batch))  
+# if __name__ == '__main__':
+#   train = 'workspace/train.tfrecords'
+#   image_bacth,label_batch = build_input(train,10,100,'train')
+#   sess = tf.Session()
+#   #使用session测试读取结果
+#   with sess.as_default():
+#     run_image_bacth = sess.run(image_bacth)
+#     run_label_batch = sess.run(label_batch)
+# if __name__ == '__main__':
+#   a = tf.constant([1.0,2.0])
+#   b = tf.constant([3.0,4.0])
+#   with tf.Graph().as_default() as g1:
+#     c1 = tf.constant([4.0,5.0])
+#   with tf.Graph().as_default() as g2:
+#     c2 = tf.constant([7.0,8.0])
+#   with tf.Session(graph=g1) as s1:
+#     print(s1.run(c1))
 
 

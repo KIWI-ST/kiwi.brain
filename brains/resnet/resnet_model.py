@@ -52,7 +52,7 @@ class ResNet(object):
     #样本（输入）
     self._images = images
     #标签（输入）
-    self.labels = labels
+    self.labels = tf.one_hot(indices=tf.cast(labels, tf.int32), depth=self.hps.num_classes)
     #指示训练模式还是测试模式
     self.mode = mode
     #滑动平均操作
@@ -77,7 +77,7 @@ class ResNet(object):
     """Build the core model within the graph."""
     with tf.variable_scope('init'): #init层将图片的3通道变为16通道feature map输出
       x = self._images
-      x = self._conv('init_conv', x, 3, 3, 16, self._stride_arr(1))
+      x = self._conv('init_conv', x, 3, 1, 16, self._stride_arr(1))
 
     strides = [1, 2, 2]  #后面两个2的stride用来降采样
     activate_before_residual = [True, False, False]
@@ -275,13 +275,21 @@ class ResNet(object):
 
   #卷积
   def _conv(self, name, x, filter_size, in_filters, out_filters, strides):
-    """Convolution."""
+    """卷积算法 需要与x的输入保持一致.
+    Args:
+      name:tensor操作的结点名.
+      filter_size:卷积核的宽高.
+      in_filters:原始通道数.
+      out_filters:输出结果通道数.
+      strides:卷积时在图像每一维的不长，一纬的向量，长度4.
+    """
     with tf.variable_scope(name):
       n = filter_size * filter_size * out_filters
-      kernel = tf.get_variable(
-          'DW', [filter_size, filter_size, in_filters, out_filters],
-          tf.float32, initializer=tf.random_normal_initializer(
-              stddev=np.sqrt(2.0/n)))
+      #卷积核，结构为 [filter_height, filter_width, in_channels, out_channels]
+      kernel = tf.get_variable('DW', 
+      [filter_size, filter_size, in_filters, out_filters],
+      tf.float32, initializer=tf.random_normal_initializer(stddev=np.sqrt(2.0/n)))
+      #
       return tf.nn.conv2d(x, kernel, strides, padding='SAME')
 
   #激活
@@ -289,13 +297,16 @@ class ResNet(object):
     """Relu, with optional leaky support."""
     return tf.where(tf.less(x, 0.0), leakiness * x, x, name='leaky_relu')
 
-  #全链接
+  #全链接 得到 y(hat)
   def _fully_connected(self, x, out_dim):
     """FullyConnected layer for final output."""
+    #将一个批次的数据转换为一纬数组
     x = tf.reshape(x, [self.hps.batch_size, -1])
     w = tf.get_variable(
-        'DW', [x.get_shape()[1], out_dim],
-        initializer=tf.uniform_unit_scaling_initializer(factor=1.0))
+      'DW', [x.get_shape()[1], out_dim],
+      initializer=tf.uniform_unit_scaling_initializer(factor=1.0)
+    )
+    #
     b = tf.get_variable('biases', [out_dim],
                         initializer=tf.constant_initializer())
     return tf.nn.xw_plus_b(x, w, b)
