@@ -52,7 +52,7 @@ class ResNet(object):
     #样本（输入）
     self._images =tf.reshape(images,[self.hps.batch_size, width, height, depth])
     #标签（输入）
-    self.labels = tf.one_hot(indices=tf.cast(labels, tf.int32), depth=self.hps.num_classes)
+    self.labels = tf.reshape(labels, [self.hps.batch_size,self.hps.num_classes])
     #self.labels =  tf.sparse_to_dense(tf.concat(values=[indices, labels], axis=1),[batch_size, num_classes], 1.0, 0.0)
     #指示训练模式还是测试模式
     self.mode = mode
@@ -76,6 +76,8 @@ class ResNet(object):
     """Build the core model within the graph."""
     with tf.variable_scope('init'): #init层将图片的3通道变为16通道feature map输出
       x = self._images
+      #image 归一化
+      x = x / 128 - 1
       x = self._conv('init_conv', x, 3, 1, 16, self._stride_arr(1))
     strides = [1, 2, 2]  #后面两个2的stride用来降采样
     activate_before_residual = [True, False, False]

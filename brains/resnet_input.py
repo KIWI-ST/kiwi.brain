@@ -13,7 +13,7 @@ def num_examples_per_epoch(subset='train'):
 
 class ResnetInput(object):
   """ resnet 输入 """
-  def __init__(self, image_width, image_height, image_depth, data_dir, subset='train', use_distortion=True):
+  def __init__(self, image_width, image_height, image_depth, data_dir, num_classes = 11,subset='train', use_distortion=True):
     #数据目录
     self.data_dir = data_dir
     #数据级
@@ -26,6 +26,8 @@ class ResnetInput(object):
     self.HEIGHT = image_height
     #图像通道数
     self.DEPTH = image_depth
+    #分类个数，用于one_hot编码
+    self.num_classes = num_classes
   
   def get_filenames(self):
     if self.subset in ['train', 'validation', 'eval']:
@@ -49,6 +51,7 @@ class ResnetInput(object):
     image.set_shape([self.DEPTH * self.HEIGHT * self.WIDTH])
     image = tf.cast(tf.transpose(tf.reshape(image, [self.DEPTH, self.HEIGHT, self.WIDTH]), [1, 2, 0]), tf.float32)
     label = tf.cast(features['label'], tf.int32)
+    label = tf.one_hot(label,depth = self.num_classes)
     #preprocess
     image = self.preprocess(image)
     return image, label
@@ -79,17 +82,9 @@ class ResnetInput(object):
 if __name__ == '__main__':
   train = 'workspace/'
   input = ResnetInput(data_dir=train, image_width = 10, image_height =10, image_depth=1)
-  image_bacth,label_bacth1 =  input.make_batch(11)
-  #label_bacth1 = tf.reshape(label_bacth1,[1,])
-  labels =tf.one_hot(tf.cast(label_bacth1, tf.int32), 11)
-  lableConstant = tf.constant([5,2,3,1,4,2,1,5,6,7,10])
-  labels2 = tf.one_hot(lableConstant,11)
+  image_bacth,label_bacth =  input.make_batch(11)
   #使用session测试读取结果
   with tf.Session() as sess:
     #print(run_image_bacth)
-    sess.run(label_bacth1)
-    sess.run(labels)
-    print(sess.run(label_bacth1))
-    print(sess.run(labels))
-    print(sess.run(lableConstant))
-    print(sess.run(labels2))
+    print(sess.run(image_bacth))
+    print(sess.run(label_bacth))

@@ -19,14 +19,14 @@ tf.app.flags.DEFINE_integer('num_classes', 11, 'label类型长度')
 tf.app.flags.DEFINE_string('mode', 'train', 'train训练，eval测试')
 tf.app.flags.DEFINE_string('train_data_path', 'workspace/', 'train.records地址')
 tf.app.flags.DEFINE_string('eval_data_path', 'workspace/', 'eval.records地址')
-tf.app.flags.DEFINE_integer('width', 10, '图片宽度')
-tf.app.flags.DEFINE_integer('height', 10, '图片高度')
+tf.app.flags.DEFINE_integer('width', 8, '图片宽度')
+tf.app.flags.DEFINE_integer('height', 8, '图片高度')
 tf.app.flags.DEFINE_integer('depth', 1, '通道')
 tf.app.flags.DEFINE_string('train_dir', 'workspace/tfrecords/All13x10/tmp/', '训练输出')
 tf.app.flags.DEFINE_string('eval_dir', 'workspace/tfrecords/All13x10/tmp/', '验证输出')
 tf.app.flags.DEFINE_integer('eval_batch_count', 100, '验证机一批样本数量')
 tf.app.flags.DEFINE_bool('eval_once', False, 'Whether evaluate the model only once.')
-tf.app.flags.DEFINE_string('log_root', '', 'Directory to keep the checkpoints. Should be a ''parent directory of FLAGS.train_dir/eval_dir.')
+tf.app.flags.DEFINE_string('log_root', 'workspace/tmp/', 'Directory to keep the checkpoints. Should be a ''parent directory of FLAGS.train_dir/eval_dir.')
 tf.app.flags.DEFINE_integer('num_gpus', 1, 'Number of gpus used for training. (0 or 1)')
 #训练模式
 def train(hps):
@@ -35,10 +35,6 @@ def train(hps):
   input = resnet_input.ResnetInput(data_dir=FLAGS.train_data_path, image_width = FLAGS.width, image_height = FLAGS.height, image_depth=FLAGS.depth)
   #make
   images_batch,label_batch = input.make_batch(FLAGS.batch_size)
-  #展开 image batch
-  # images_batch = tf.unstack(images_batch, num=FLAGS.batch_size, axis=0)
-  #展开 label batch
-  label_batch =  tf.unstack(label_batch, num=FLAGS.batch_size, axis=0)
   #初始化resnet参数
   model = resnet_model.ResNet(hps, images_batch, label_batch, FLAGS.width, FLAGS.height, FLAGS.depth ,FLAGS.mode)
   #构建tensorflow graph
@@ -73,11 +69,11 @@ def train(hps):
 
     def after_run(self, run_context, run_values):
       train_step = run_values.results
-      if train_step < 40000:
+      if train_step < 100000:
         self._lrn_rate = 0.1
-      elif train_step < 60000:
+      elif train_step < 200000:
         self._lrn_rate = 0.01
-      elif train_step < 80000:
+      elif train_step < 300000:
         self._lrn_rate = 0.001
       else:
         self._lrn_rate = 0.0001
@@ -88,8 +84,7 @@ def train(hps):
       chief_only_hooks=[summary_hook],
       # Since we provide a SummarySaverHook, we need to disable default
       # SummarySaverHook. To do that we set save_summaries_steps to 0.
-      save_summaries_steps=0,
-          config=tf.ConfigProto(allow_soft_placement=True)) as mon_sess:
+      save_summaries_steps=1000,config=tf.ConfigProto(allow_soft_placement=True)) as mon_sess:
     while not mon_sess.should_stop():
       mon_sess.run(model.train_op)
 
