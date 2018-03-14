@@ -80,7 +80,7 @@ class ResNet(object):
       x = self._conv('init_conv', x, 3, 1, 16, self._stride_arr(1))
     strides = [1, 2, 2]  #后面两个2的stride用来降采样
     activate_before_residual = [True, False, False]
-    
+
     if self.hps.use_bottleneck:
       res_func = self._residual_v2 #bottleneck结构，包含三个卷积子层
       filters = [16, 64, 128, 256]
@@ -157,8 +157,7 @@ class ResNet(object):
         tf.summary.histogram(mean.op.name, mean)
         tf.summary.histogram(variance.op.name, variance)
       # epsilon used to be 1e-5. Maybe 0.001 solves NaN problem in deeper net.
-      y = tf.nn.batch_normalization(
-          x, mean, variance, beta, gamma, 0.001)
+      y = tf.nn.batch_normalization(x, mean, variance, beta, gamma, 0.001)
       y.set_shape(x.get_shape())
       return y
 
@@ -178,17 +177,16 @@ class ResNet(object):
 
     with tf.variable_scope('sub1'):
       x = self._conv('conv1', x, 3, in_filter, out_filter, stride)
-
     with tf.variable_scope('sub2'):
       x = self._batch_norm('bn2', x)
       x = self._relu(x, self.hps.relu_leakiness)
       x = self._conv('conv2', x, 3, out_filter, out_filter, [1, 1, 1, 1])
-
     with tf.variable_scope('sub_add'):
       if in_filter != out_filter:
-        orig_x = tf.nn.avg_pool(orig_x, stride, stride, 'VALID')
+        orig_x = tf.nn.avg_pool(orig_x, stride, stride, 'SAME')
         orig_x = tf.pad(orig_x, [[0, 0], [0, 0], [0, 0],[(out_filter-in_filter)//2, (out_filter-in_filter)//2]])
       x += orig_x
+
     tf.logging.debug('image after unit %s', x.get_shape())
     return x
 
@@ -234,7 +232,6 @@ class ResNet(object):
       if var.op.name.find(r'DW') > 0:
         costs.append(tf.nn.l2_loss(var))
         # tf.summary.histogram(var.op.name, var)
-
     return tf.multiply(self.hps.weight_decay_rate, tf.add_n(costs))
 
   #卷积
@@ -271,8 +268,7 @@ class ResNet(object):
       initializer=tf.uniform_unit_scaling_initializer(factor=1.0)
     )
     #
-    b = tf.get_variable('biases', [out_dim],
-                        initializer=tf.constant_initializer())
+    b = tf.get_variable('biases', [out_dim], initializer=tf.constant_initializer())
     return tf.nn.xw_plus_b(x, w, b)
 
   #全局池化
