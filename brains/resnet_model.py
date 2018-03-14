@@ -40,7 +40,7 @@ HParams = namedtuple('HParams',
 class ResNet(object):
   """ResNet model."""
 
-  def __init__(self, hps, images, labels, width, height, depth,mode):
+  def __init__(self, hps, images, labels, width, height, depth, mode):
     """ResNet constructor.
     Args:
       hps: Hyperparameters.
@@ -50,10 +50,10 @@ class ResNet(object):
     """
     self.hps = hps
     #样本（输入）
-    self._images =tf.reshape(images,[self.hps.batch_size, width, height, depth])
+    self._images = tf.reshape(images,[self.hps.batch_size, width, height, depth])
     #标签（输入）
-    self.labels = tf.reshape(labels, [self.hps.batch_size,self.hps.num_classes])
-    #self.labels =  tf.sparse_to_dense(tf.concat(values=[indices, labels], axis=1),[batch_size, num_classes], 1.0, 0.0)
+    self.labels = labels
+    #self.labels = tf.reshape(labels, [self.hps.batch_size,self.hps.num_classes])
     #指示训练模式还是测试模式
     self.mode = mode
     #滑动平均操作
@@ -76,11 +76,11 @@ class ResNet(object):
     """Build the core model within the graph."""
     with tf.variable_scope('init'): #init层将图片的3通道变为16通道feature map输出
       x = self._images
-      #image 归一化
-      x = x / 128 - 1
+      #image 归一化 x = x / 128 - 1
       x = self._conv('init_conv', x, 3, 1, 16, self._stride_arr(1))
     strides = [1, 2, 2]  #后面两个2的stride用来降采样
     activate_before_residual = [True, False, False]
+    
     if self.hps.use_bottleneck:
       res_func = self._residual_v2 #bottleneck结构，包含三个卷积子层
       filters = [16, 64, 128, 256]
@@ -116,7 +116,8 @@ class ResNet(object):
       self.predictions = tf.nn.softmax(logits) #Softmax分类输出结果
 
     with tf.variable_scope('costs'):
-      xent = tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=self.labels)  #损失函数采用的Softmax交叉熵的形式
+      xent = tf.losses.sparse_softmax_cross_entropy(logits=logits, labels=self.labels)
+      #xent = tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=self.labels)  #损失函数采用的Softmax交叉熵的形式
       self.cost = tf.reduce_mean(xent, name='xent')
       self.cost += self._decay()
       tf.summary.scalar('cost', self.cost) #summary收集信息用于tensorboard的可视化显示

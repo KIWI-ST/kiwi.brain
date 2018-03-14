@@ -44,7 +44,8 @@ def train(hps):
   #打印训练参数
   sys.stdout.write('total_params: %d\n' % param_stats.total_parameters)
   #argmax 返回最大值的索引号 例如 [[1,3,4,5,6]] - > [4] 或 [[1,3,4], [2,4,1]] -> [2,1]
-  truth = tf.argmax(model.labels, axis=1)
+  #truth = tf.argmax(model.labels, axis=0)
+  truth = tf.cast(model.labels,tf.int64)
   #输出值
   predictions = tf.argmax(model.predictions, axis=1)
   #精度验证
@@ -54,7 +55,8 @@ def train(hps):
                                            model.summaries, tf.summary.scalar('Precision', precision)]))
   #结论，打印过程
   logging_hook = tf.train.LoggingTensorHook(
-      tensors={'step': model.global_step, 'loss': model.cost, 'precision': precision}, every_n_iter=100)
+      tensors={'step': model.global_step, 'loss': model.cost, 'precision': precision,'predictions':predictions,'truth':truth}, 
+      every_n_iter=100)
 
   class _LearningRateSetterHook(tf.train.SessionRunHook):
     """Sets learning_rate based on global step."""
@@ -164,7 +166,7 @@ def main(_):
                              use_bottleneck=False,
                              weight_decay_rate=0.0002,
                              relu_leakiness=0.1,
-                             optimizer='mom')
+                             optimizer='sgd')
   #训练模型
   with tf.device(dev):
     if FLAGS.mode == 'train':

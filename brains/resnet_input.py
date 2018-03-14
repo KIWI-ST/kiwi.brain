@@ -35,7 +35,7 @@ class ResnetInput(object):
       
   def preprocess(self, image):
     if self.subset == "train" and self.use_distortion:
-      image = tf.image.resize_image_with_crop_or_pad(image, 40, 40)
+      image = tf.image.resize_image_with_crop_or_pad(image, self.WIDTH + 2, self.HEIGHT + 2)
       image = tf.random_crop(image, [self.HEIGHT, self.WIDTH, self.DEPTH])
       image = tf.image.random_flip_left_right(image)
     return image
@@ -51,7 +51,8 @@ class ResnetInput(object):
     image.set_shape([self.DEPTH * self.HEIGHT * self.WIDTH])
     image = tf.cast(tf.transpose(tf.reshape(image, [self.DEPTH, self.HEIGHT, self.WIDTH]), [1, 2, 0]), tf.float32)
     label = tf.cast(features['label'], tf.int32)
-    label = tf.one_hot(label,depth = self.num_classes)
+    #不使用one_hot转码
+    #label = tf.one_hot(label,depth = self.num_classes)
     #preprocess
     image = self.preprocess(image)
     return image, label
@@ -79,12 +80,12 @@ class ResnetInput(object):
     return image_batch, label_batch
 
 #example
-if __name__ == '__main__':
-  train = 'workspace/'
-  input = ResnetInput(data_dir=train, image_width = 10, image_height =10, image_depth=1)
-  image_bacth,label_bacth =  input.make_batch(11)
-  #使用session测试读取结果
-  with tf.Session() as sess:
-    #print(run_image_bacth)
-    print(sess.run(image_bacth))
-    print(sess.run(label_bacth))
+# if __name__ == '__main__':
+#   train = 'workspace/'
+#   input = ResnetInput(data_dir=train, image_width = 10, image_height =10, image_depth=1)
+#   image_bacth,label_bacth =  input.make_batch(11)
+#   #使用session测试读取结果
+#   with tf.Session() as sess:
+#     #print(run_image_bacth)
+#     print(sess.run(image_bacth))
+#     print(sess.run(label_bacth))
