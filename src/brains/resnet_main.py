@@ -166,7 +166,7 @@ def main(_):
                              use_bottleneck=False,
                              weight_decay_rate=0.0002,
                              relu_leakiness=0.1,
-                             optimizer='sgd')
+                             optimizer='mom')
   #训练模型
   with tf.device(dev):
     if FLAGS.mode == 'train':
