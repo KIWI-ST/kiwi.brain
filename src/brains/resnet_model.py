@@ -50,7 +50,8 @@ class ResNet(object):
     """
     self.hps = hps
     #样本（输入）
-    self._images = tf.reshape(images,[self.hps.batch_size, width, height, depth],'input')
+    # self._images = tf.reshape(images,[self.hps.batch_size, width, height, depth],'input')
+    self._images = images
     #标签（输入）
     self.labels = labels
     #self.labels = tf.reshape(labels, [self.hps.batch_size,self.hps.num_classes])
@@ -114,6 +115,7 @@ class ResNet(object):
     with tf.variable_scope('logit'):
       logits = self._fully_connected(x, self.hps.num_classes) #全连接层输出
       self.predictions = tf.nn.softmax(logits) #Softmax分类输出结果
+      self.predictions_argmax = tf.argmax(self.predictions, axis=1, name='output')
 
     with tf.variable_scope('costs'):
       xent = tf.losses.sparse_softmax_cross_entropy(logits=logits, labels=self.labels)
@@ -261,15 +263,17 @@ class ResNet(object):
   #全链接 得到 y(hat)
   def _fully_connected(self, x, out_dim):
     """FullyConnected layer for final output."""
+    x = tf.layers.dense(x, out_dim)
+    return x
     #将一个批次的数据转换为一纬数组
-    x = tf.reshape(x, [self.hps.batch_size, -1])
-    w = tf.get_variable(
-      'DW', [x.get_shape()[1], out_dim],
-      initializer=tf.uniform_unit_scaling_initializer(factor=1.0)
-    )
-    #
-    b = tf.get_variable('biases', [out_dim], initializer=tf.constant_initializer())
-    return tf.nn.xw_plus_b(x, w, b,"output")
+    # x = tf.reshape(x, [self.hps.batch_size, -1])
+    # w = tf.get_variable(
+    #   'DW', [x.get_shape()[1], out_dim],
+    #   initializer=tf.uniform_unit_scaling_initializer(factor=1.0)
+    # )
+    # #
+    # b = tf.get_variable('biases', [out_dim], initializer=tf.constant_initializer())
+    # return tf.nn.xw_plus_b(x, w, b,"output")
 
   #全局池化
   def _global_avg_pool(self, x):

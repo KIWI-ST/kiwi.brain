@@ -1,6 +1,7 @@
 import os
 import tensorflow as tf
 
+
 def num_examples_per_epoch(subset='train'):
     if subset == 'train':
       return 45000
@@ -11,9 +12,11 @@ def num_examples_per_epoch(subset='train'):
     else:
       raise ValueError('Invalid data subset "%s"' % subset)
 
+
 class ResnetInput(object):
   """ resnet 输入 """
-  def __init__(self, image_width, image_height, image_depth, data_dir, num_classes = 11,subset='train', use_distortion=True):
+
+  def __init__(self, image_width, image_height, image_depth, data_dir, num_classes=11, subset='train', use_distortion=True):
     #数据目录
     self.data_dir = data_dir
     #数据级
@@ -28,28 +31,30 @@ class ResnetInput(object):
     self.DEPTH = image_depth
     #分类个数，用于one_hot编码
     self.num_classes = num_classes
-  
+
   def get_filenames(self):
     if self.subset in ['train', 'validation', 'eval']:
       return [os.path.join(self.data_dir, self.subset + '.tfrecords')]
-      
+
   def preprocess(self, image):
     if self.subset == "train" and self.use_distortion:
-      image = tf.image.resize_image_with_crop_or_pad(image, self.WIDTH + 2, self.HEIGHT + 2)
+      image = tf.image.resize_image_with_crop_or_pad(
+          image, self.WIDTH + 2, self.HEIGHT + 2)
       image = tf.random_crop(image, [self.HEIGHT, self.WIDTH, self.DEPTH])
       image = tf.image.random_flip_left_right(image)
     return image
-  
+
   def parser(self, serialized_example):
     features = tf.parse_single_example(
-      serialized_example,
-      features={
-          'image': tf.FixedLenFeature([], tf.string),
-          'label': tf.FixedLenFeature([], tf.int64),
-      })
+        serialized_example,
+        features={
+            'image': tf.FixedLenFeature([], tf.string),
+            'label': tf.FixedLenFeature([], tf.int64),
+        })
     image = tf.decode_raw(features['image'], tf.uint8)
     image.set_shape([self.DEPTH * self.HEIGHT * self.WIDTH])
-    image = tf.cast(tf.transpose(tf.reshape(image, [self.DEPTH, self.HEIGHT, self.WIDTH]), [1, 2, 0]), tf.float32)
+    image = tf.cast(tf.transpose(tf.reshape(
+        image, [self.DEPTH, self.HEIGHT, self.WIDTH]), [1, 2, 0]), tf.float32)
     label = tf.cast(features['label'], tf.int32)
     #不使用one_hot转码
     #label = tf.one_hot(label,depth = self.num_classes)
@@ -69,13 +74,14 @@ class ResnetInput(object):
       #预计数量*0.4构建随机乱序batch
       min_queue_examples = int(num_examples_per_epoch(self.subset)*0.4)
       #确保整体容量能够生成较为优质的batch
-      dataset = dataset.shuffle(buffer_size=min_queue_examples + 3 * batch_size)
+      dataset = dataset.shuffle(
+          buffer_size=min_queue_examples + 3 * batch_size)
     #打包
     dataset = dataset.batch(batch_size)
     #构建迭代tesnor
     iterator = dataset.make_one_shot_iterator()
     #获取图片tensor和标注tensor
-    image_batch, label_batch = iterator.get_next()
+    image_batch, label_batch = iterator.get_next(name="input")
     #返回tensor
     return image_batch, label_batch
 

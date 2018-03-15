@@ -60,5 +60,5 @@ def freeze_graph(model_dir, output_node_names):
 #example
 if __name__ == '__main__':
     model_dir = "dist/graph/"
-    output_node_names = "logit/Softmax"
+    output_node_names = "logit/output"
     freeze_graph(model_dir,output_node_names)
