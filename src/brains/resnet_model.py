@@ -50,7 +50,7 @@ class ResNet(object):
     """
     self.hps = hps
     #样本（输入）
-    self._images = tf.reshape(images,[self.hps.batch_size, width, height, depth])
+    self._images = tf.reshape(images,[self.hps.batch_size, width, height, depth],'input')
     #标签（输入）
     self.labels = labels
     #self.labels = tf.reshape(labels, [self.hps.batch_size,self.hps.num_classes])
@@ -269,7 +269,7 @@ class ResNet(object):
     )
     #
     b = tf.get_variable('biases', [out_dim], initializer=tf.constant_initializer())
-    return tf.nn.xw_plus_b(x, w, b)
+    return tf.nn.xw_plus_b(x, w, b,"output")
 
   #全局池化
   def _global_avg_pool(self, x):
