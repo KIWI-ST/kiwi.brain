@@ -22,11 +22,11 @@ tf.app.flags.DEFINE_string('eval_data_path', 'workspace/', 'eval.records地址')
 tf.app.flags.DEFINE_integer('width', 10, '图片宽度')
 tf.app.flags.DEFINE_integer('height', 10, '图片高度')
 tf.app.flags.DEFINE_integer('depth', 1, '通道')
-tf.app.flags.DEFINE_string('train_dir', 'workspace/tfrecords/All13x10/tmp/', '训练输出')
-tf.app.flags.DEFINE_string('eval_dir', 'workspace/tfrecords/All13x10/tmp/', '验证输出')
+tf.app.flags.DEFINE_string('train_dir', 'dist/train/', '训练输出')
+tf.app.flags.DEFINE_string('eval_dir', 'dist/eval/', '验证输出')
 tf.app.flags.DEFINE_integer('eval_batch_count', 100, '验证机一批样本数量')
 tf.app.flags.DEFINE_bool('eval_once', False, 'Whether evaluate the model only once.')
-tf.app.flags.DEFINE_string('log_root', 'workspace/tmp/', 'Directory to keep the checkpoints. Should be a ''parent directory of FLAGS.train_dir/eval_dir.')
+tf.app.flags.DEFINE_string('log_root', 'dist/graph/', 'Directory to keep the checkpoints. Should be a ''parent directory of FLAGS.train_dir/eval_dir.')
 tf.app.flags.DEFINE_integer('num_gpus', 1, 'Number of gpus used for training. (0 or 1)')
 #训练模式
 def train(hps):
@@ -72,13 +72,13 @@ def train(hps):
     def after_run(self, run_context, run_values):
       train_step = run_values.results
       if train_step < 100000:
-        self._lrn_rate = 0.1
-      elif train_step < 200000:
         self._lrn_rate = 0.01
-      elif train_step < 300000:
+      elif train_step < 200000:
         self._lrn_rate = 0.001
-      else:
+      elif train_step < 300000:
         self._lrn_rate = 0.0001
+      else:
+        self._lrn_rate = 0.00001
 
   with tf.train.MonitoredTrainingSession(
       checkpoint_dir=FLAGS.log_root,
