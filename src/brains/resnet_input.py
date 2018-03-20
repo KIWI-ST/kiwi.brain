@@ -16,7 +16,7 @@ def num_examples_per_epoch(subset='train'):
 class ResnetInput(object):
   """ resnet 输入 """
 
-  def __init__(self, image_width, image_height, image_depth, data_dir, num_classes=11, subset='train', use_distortion=True):
+  def __init__(self, image_width, image_height, image_depth, data_dir, num_classes, subset='train', use_distortion=True):
     #数据目录
     self.data_dir = data_dir
     #数据级
@@ -53,11 +53,10 @@ class ResnetInput(object):
         })
     image = tf.decode_raw(features['image'], tf.uint8)
     image.set_shape([self.DEPTH * self.HEIGHT * self.WIDTH])
-    image = tf.cast(tf.transpose(tf.reshape(
-        image, [self.DEPTH, self.HEIGHT, self.WIDTH]), [1, 2, 0]), tf.float32)
+    image = tf.cast(tf.transpose(tf.reshape(image, [self.DEPTH, self.HEIGHT, self.WIDTH]), [1, 2, 0]), tf.float32)
     label = tf.cast(features['label'], tf.int32)
     #不使用one_hot转码
-    #label = tf.one_hot(label,depth = self.num_classes)
+    label = tf.one_hot(label,depth = self.num_classes)
     #preprocess
     image = self.preprocess(image)
     return image, label

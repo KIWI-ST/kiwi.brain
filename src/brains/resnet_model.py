@@ -40,7 +40,7 @@ HParams = namedtuple('HParams',
 class ResNet(object):
   """ResNet model."""
 
-  def __init__(self, hps, images, labels, width, height, depth, mode):
+  def __init__(self, hps, images, labels, mode):
     """ResNet constructor.
     Args:
       hps: Hyperparameters.
@@ -118,8 +118,8 @@ class ResNet(object):
       self.predictions_argmax = tf.argmax(self.predictions, axis=1, name='output')
 
     with tf.variable_scope('costs'):
-      xent = tf.losses.sparse_softmax_cross_entropy(logits=logits, labels=self.labels)
-      #xent = tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=self.labels)  #损失函数采用的Softmax交叉熵的形式
+      #xent = tf.losses.sparse_softmax_cross_entropy(logits=logits, labels=self.labels)
+      xent = tf.nn.softmax_cross_entropy_with_logits_v2(logits=logits, labels=self.labels)  #损失函数采用的Softmax交叉熵的形式
       self.cost = tf.reduce_mean(xent, name='xent')
       self.cost += self._decay()
       tf.summary.scalar('cost', self.cost) #summary收集信息用于tensorboard的可视化显示
@@ -258,7 +258,8 @@ class ResNet(object):
   #激活
   def _relu(self, x, leakiness=0.0):
     """Relu, with optional leaky support."""
-    return tf.where(tf.less(x, 0.0), leakiness * x, x, name='leaky_relu')
+    #return tf.where(tf.less(x, 0.0), leakiness * x, x, name='leaky_relu')
+    return tf.nn.relu(x)
 
   #全链接 得到 y(hat)
   def _fully_connected(self, x, out_dim):

@@ -32,11 +32,11 @@ tf.app.flags.DEFINE_integer('num_gpus', 1, 'Number of gpus used for training. (0
 def train(hps):
   """Training loop."""
   #构建images和labels训练input
-  input = resnet_input.ResnetInput(data_dir=FLAGS.train_data_path, image_width = FLAGS.width, image_height = FLAGS.height, image_depth=FLAGS.depth)
+  input = resnet_input.ResnetInput(data_dir=FLAGS.train_data_path, image_width = FLAGS.width, image_height = FLAGS.height, image_depth=FLAGS.depth, num_classes=FLAGS.num_classes)
   #make
   images_batch,label_batch = input.make_batch(FLAGS.batch_size)
   #初始化resnet参数
-  model = resnet_model.ResNet(hps, images_batch, label_batch, FLAGS.width, FLAGS.height, FLAGS.depth ,FLAGS.mode)
+  model = resnet_model.ResNet(hps, images_batch, label_batch ,FLAGS.mode)
   #构建tensorflow graph
   model.build_graph()
   #分析训练参数
@@ -45,18 +45,20 @@ def train(hps):
   sys.stdout.write('total_params: %d\n' % param_stats.total_parameters)
   #argmax 返回最大值的索引号 例如 [[1,3,4,5,6]] - > [4] 或 [[1,3,4], [2,4,1]] -> [2,1]
   #truth = tf.argmax(model.labels, axis=0)
-  truth = tf.cast(model.labels,tf.int64)
+  truth = tf.cast(model.labels, tf.float32)
   #输出值
-  predictions = tf.argmax(model.predictions, axis=1)
+  #predictions = tf.argmax(model.predictions, axis=1)
+  predictions = tf.cast(model.predictions, tf.float32)
+  #修整最小值
+  predictions = tf.where(tf.less(predictions, 0.00001), 0.0*predictions, predictions)
+  #休整最大值
+  predictions = tf.where(tf.greater(predictions, 0.99991), predictions/predictions, predictions)
   #精度验证
   precision = tf.reduce_mean(tf.to_float(tf.equal(predictions, truth)))
   #结论，提供给tensorboard可视化
-  summary_hook = tf.train.SummarySaverHook(save_steps=100, output_dir=FLAGS.train_dir, summary_op=tf.summary.merge([
-                                           model.summaries, tf.summary.scalar('Precision', precision)]))
+  summary_hook = tf.train.SummarySaverHook(save_steps=100, output_dir=FLAGS.train_dir, summary_op=tf.summary.merge([model.summaries, tf.summary.scalar('Precision', precision)]))
   #结论，打印过程
-  logging_hook = tf.train.LoggingTensorHook(
-      tensors={'step': model.global_step, 'loss': model.cost, 'precision': precision,'predictions':predictions,'truth':truth}, 
-      every_n_iter=100)
+  logging_hook = tf.train.LoggingTensorHook(tensors={'step': model.global_step, 'loss': model.cost, 'precision': precision,'predictions':predictions,'truth':truth}, every_n_iter=100)
 
   class _LearningRateSetterHook(tf.train.SessionRunHook):
     """Sets learning_rate based on global step."""
@@ -71,12 +73,12 @@ def train(hps):
 
     def after_run(self, run_context, run_values):
       train_step = run_values.results
-      if train_step < 100000:
+      if train_step < 45000:
+        self._lrn_rate = 0.1
+      elif train_step < 80000:
         self._lrn_rate = 0.01
       elif train_step < 200000:
         self._lrn_rate = 0.001
-      elif train_step < 300000:
-        self._lrn_rate = 0.0001
       else:
         self._lrn_rate = 0.00001
 
