@@ -14,7 +14,7 @@ import resnet_input
 #设置参数
 FLAGS = tf.app.flags.FLAGS
 #
-tf.app.flags.DEFINE_integer('batch_size', 128, '一批数据的容量')
+tf.app.flags.DEFINE_integer('batch_size', 4, '一批数据的容量')
 tf.app.flags.DEFINE_integer('num_classes', 11, 'label类型长度')
 tf.app.flags.DEFINE_string('mode', 'train', 'train训练，eval测试')
 tf.app.flags.DEFINE_string('train_data_path', 'workspace/', 'train.records地址')
@@ -46,19 +46,23 @@ def train(hps):
   #argmax 返回最大值的索引号 例如 [[1,3,4,5,6]] - > [4] 或 [[1,3,4], [2,4,1]] -> [2,1]
   #truth = tf.argmax(model.labels, axis=0)
   truth = tf.cast(model.labels, tf.float32)
+  #debug
+  truth2 = tf.argmax(truth,axis=1)
   #输出值
   #predictions = tf.argmax(model.predictions, axis=1)
   predictions = tf.cast(model.predictions, tf.float32)
   #修整最小值
-  predictions = tf.where(tf.less(predictions, 0.00001), 0.0*predictions, predictions)
+  predictions = tf.where(tf.less(predictions, 0.001), 0.0*predictions, predictions)
   #休整最大值
-  predictions = tf.where(tf.greater(predictions, 0.99991), predictions/predictions, predictions)
+  predictions = tf.where(tf.greater(predictions, 0.999), predictions/predictions, predictions)
+  #debug
+  predictions2 = tf.argmax(predictions,axis=1)
   #精度验证
   precision = tf.reduce_mean(tf.to_float(tf.equal(predictions, truth)))
   #结论，提供给tensorboard可视化
   summary_hook = tf.train.SummarySaverHook(save_steps=100, output_dir=FLAGS.train_dir, summary_op=tf.summary.merge([model.summaries, tf.summary.scalar('Precision', precision)]))
   #结论，打印过程
-  logging_hook = tf.train.LoggingTensorHook(tensors={'step': model.global_step, 'loss': model.cost, 'precision': precision,'predictions':predictions,'truth':truth}, every_n_iter=100)
+  logging_hook = tf.train.LoggingTensorHook(tensors={'step': model.global_step, 'loss': model.cost, 'precision': precision,'truth2':truth2, 'predictions2':predictions2}, every_n_iter=100)
 
   class _LearningRateSetterHook(tf.train.SessionRunHook):
     """Sets learning_rate based on global step."""

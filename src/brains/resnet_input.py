@@ -38,8 +38,8 @@ class ResnetInput(object):
 
   def preprocess(self, image):
     if self.subset == "train" and self.use_distortion:
-      image = tf.image.resize_image_with_crop_or_pad(
-          image, self.WIDTH + 2, self.HEIGHT + 2)
+      #图像处理
+      image = tf.image.resize_image_with_crop_or_pad(image, self.WIDTH, self.HEIGHT)
       image = tf.random_crop(image, [self.HEIGHT, self.WIDTH, self.DEPTH])
       image = tf.image.random_flip_left_right(image)
     return image
@@ -73,8 +73,7 @@ class ResnetInput(object):
       #预计数量*0.4构建随机乱序batch
       min_queue_examples = int(num_examples_per_epoch(self.subset)*0.4)
       #确保整体容量能够生成较为优质的batch
-      dataset = dataset.shuffle(
-          buffer_size=min_queue_examples + 3 * batch_size)
+      dataset = dataset.shuffle(buffer_size=min_queue_examples + 3 * batch_size)
     #打包
     dataset = dataset.batch(batch_size)
     #构建迭代tesnor
@@ -85,12 +84,12 @@ class ResnetInput(object):
     return image_batch, label_batch
 
 #example
-# if __name__ == '__main__':
-#   train = 'workspace/'
-#   input = ResnetInput(data_dir=train, image_width = 10, image_height =10, image_depth=1)
-#   image_bacth,label_bacth =  input.make_batch(11)
-#   #使用session测试读取结果
-#   with tf.Session() as sess:
-#     #print(run_image_bacth)
-#     print(sess.run(image_bacth))
-#     print(sess.run(label_bacth))
+if __name__ == '__main__':
+  train = 'workspace/'
+  input = ResnetInput(data_dir=train, image_width = 10, image_height =10, image_depth=1,num_classes = 11)
+  image_bacth,label_bacth =  input.make_batch(11)
+  #使用session测试读取结果
+  with tf.Session() as sess:
+    #print(run_image_bacth)
+    print(sess.run(image_bacth))
+    print(sess.run(label_bacth))
