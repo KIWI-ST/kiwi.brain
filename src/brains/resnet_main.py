@@ -14,12 +14,12 @@ import resnet_input
 #设置参数
 FLAGS = tf.app.flags.FLAGS
 #
-tf.app.flags.DEFINE_integer('batch_size', 4, '一批数据的容量')
+tf.app.flags.DEFINE_integer('batch_size', 6, '一批数据的容量')
 tf.app.flags.DEFINE_integer('num_classes', 11, 'label类型长度')
 tf.app.flags.DEFINE_string('mode', 'train', 'train训练，eval测试')
 tf.app.flags.DEFINE_string('train_data_path', 'workspace/', 'train.records地址')
 tf.app.flags.DEFINE_string('eval_data_path', 'workspace/', 'eval.records地址')
-tf.app.flags.DEFINE_integer('width', 13, '图片宽度')
+tf.app.flags.DEFINE_integer('width', 10, '图片宽度')
 tf.app.flags.DEFINE_integer('height', 10, '图片高度')
 tf.app.flags.DEFINE_integer('depth', 1, '通道')
 tf.app.flags.DEFINE_string('train_dir', 'dist/train/', '训练输出')

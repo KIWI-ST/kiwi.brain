@@ -40,9 +40,8 @@ class ResnetInput(object):
     if self.subset == "train" and self.use_distortion:
       #图像处理
       image = tf.image.resize_image_with_crop_or_pad(image, self.WIDTH, self.HEIGHT)
-      image = tf.random_crop(image, [self.WIDTH, self.HEIGHT, self.DEPTH])
       #反转图片，如果输入样本长宽不一致，则无法反转
-      #image = tf.random_crop(image, [self.HEIGHT, self.WIDTH, self.DEPTH])
+      image = tf.random_crop(image, [self.HEIGHT, self.WIDTH, self.DEPTH])
       image = tf.image.random_flip_left_right(image)
     return image
 
@@ -60,7 +59,7 @@ class ResnetInput(object):
     #不使用one_hot转码
     label = tf.one_hot(label,depth = self.num_classes)
     #preprocess
-    image = self.preprocess(image)
+    #image = self.preprocess(image)
     return image, label
 
   # batch_size -> 批尺寸，即学习一次使用的数据集中数据个数
