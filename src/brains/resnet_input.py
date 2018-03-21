@@ -40,7 +40,7 @@ class ResnetInput(object):
     if self.subset == "train" and self.use_distortion:
       #图像处理
       image = tf.image.resize_image_with_crop_or_pad(image, self.WIDTH, self.HEIGHT)
-      image = tf.random_crop(image, [self.HEIGHT, self.WIDTH, self.DEPTH])
+      image = tf.random_crop(image, [self.WIDTH, self.HEIGHT, self.DEPTH])
       image = tf.image.random_flip_left_right(image)
     return image
 
