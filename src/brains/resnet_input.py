@@ -41,6 +41,8 @@ class ResnetInput(object):
       #图像处理
       image = tf.image.resize_image_with_crop_or_pad(image, self.WIDTH, self.HEIGHT)
       image = tf.random_crop(image, [self.WIDTH, self.HEIGHT, self.DEPTH])
+      #反转图片，如果输入样本长宽不一致，则无法反转
+      #image = tf.random_crop(image, [self.HEIGHT, self.WIDTH, self.DEPTH])
       image = tf.image.random_flip_left_right(image)
     return image
 
