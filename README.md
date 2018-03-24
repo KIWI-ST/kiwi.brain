@@ -10,5 +10,7 @@ deep learning to resolve trace network generation / trajectory correction ...
 >3.样本尺寸尺寸可自定义修改<br />
 
 ## usage ###
->1.构建records样本,使用 src/utils/build_records.py 将样本图片和label构建train.tfrecords和eval.tfrecords
->2.使用src/brains/resnet_main.py 训练模型，注意tf.Flags修改相关参数，常修改的参数是样本图片的规格
+>1.构建records样本,使用 src/utils/build_records.py 将样本图片和label构建train.tfrecords和eval.tfrecords</br>
+>2.使用src/brains/resnet_main.py 训练模型，注意tf.Flags修改相关参数，常修改的参数是样本图片的规格</br>
+>3.训练后的checkpoint可以使用utils/freeze_object生成 .pb文件，配合[kiwi.server](https://github.com/axmand/kiwi.server)
+的host.image.ui部分，应用训练模型</br>
