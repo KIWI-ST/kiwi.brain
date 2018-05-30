@@ -86,7 +86,7 @@ class ResnetInput(object):
 
 #example
 if __name__ == '__main__':
-  train = 'workspace/'
+  train = 'debug/resnet/'
   input = ResnetInput(data_dir=train, image_width = 10, image_height =10, image_depth=1,num_classes = 11)
   image_bacth,label_bacth =  input.make_batch(11)
   #使用session测试读取结果
