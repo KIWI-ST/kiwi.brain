@@ -3,8 +3,8 @@ import tensorflow as tf
 from PIL import Image
 import numpy as np
 
-cwd = 'D:/Workspace/train/'
-cwd_train = 'D:/Workspace/train/train/'
+cwd = 'dist/resnet/train/'
+cwd_train = 'dist/resnet/train/'
 files_train = os.listdir(cwd_train)
 files_train.sort(key=lambda x: x[:])
 writer_train = tf.python_io.TFRecordWriter(

@@ -1,6 +1,5 @@
 #coding:utf-8
 #这里也是导入常用的依赖库
-#为了直接能够在终端中运行代码，我还是把魔法命定注释掉了，具体的魔法命令的解释可以看上一个实战
 
 import numpy as np 
 import random
@@ -8,8 +7,9 @@ import itertools
 import scipy.misc
 import matplotlib.pyplot as plt 
 import tensorflow as tf 
+# import os to disable the warning
 import os 
-# %matplotlib inline 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 #先是创建环境内物体对象的class
 class gameOb():
@@ -202,7 +202,7 @@ num_episodes = 10000
 pre_train_steps = 10000
 max_epLength = 50
 load_model = False
-path = "./dqn"
+path = "debug/dqn"
 h_size = 512
 tau = 0.001
 
