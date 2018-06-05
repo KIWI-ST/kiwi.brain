@@ -61,7 +61,7 @@ class DeepQNetwork:
 
         if output_graph:
             # $ tensorboard --logdir=logs
-            tf.summary.FileWriter("logs/", self.sess.graph)
+            tf.summary.FileWriter("dist/dqn/logs/", self.sess.graph)
 
         self.sess.run(tf.global_variables_initializer())
         self.cost_his = []
