@@ -1,6 +1,5 @@
-import dqn_env as Maze
-import dqn_model as DeepQNetwork
-
+from dqn_env import Env
+from dqn_model import DeepQNetwork
 
 def run_maze():
     step = 0
