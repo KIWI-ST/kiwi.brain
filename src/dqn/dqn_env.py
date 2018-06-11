@@ -11,7 +11,7 @@ MAZE_H = 4  # grid height
 MAZE_W = 4  # grid width
 
 
-class Env(tk.Tk, object):
+class Env(object):
     def __init__(self):
         super(Env, self).__init__()
         #定义分类动作
@@ -20,7 +20,8 @@ class Env(tk.Tk, object):
         self.n_actions = len(self.action_space)
         #定义神经网络输入单元参数个数
         self.n_features = 2
-        self.title('maze')
+        #定义类型图形界面顶部title 
+        #self.title('maze')
         self.geometry('{0}x{1}'.format(MAZE_H * UNIT, MAZE_H * UNIT))
         self._build_maze()
 

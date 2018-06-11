@@ -20,39 +20,44 @@ class DeepQNetwork:
             e_greedy_increment=None,
             output_graph=False,
     ):
+        #神经网络output，即为分类种类数目
         self.n_actions = n_actions
+        #神经网络input,即为input_features
         self.n_features = n_features
+        #神经网络学习率
         self.lr = learning_rate
+        #Q(s,a)函数学习率
         self.gamma = reward_decay
+        #随机选择action
         self.epsilon_max = e_greedy
+        #阻断两个网络的学习间隔，即(replace_target_iter步后，将神经网络参数替换到taget_network)
         self.replace_target_iter = replace_target_iter
+        #记忆库容量
         self.memory_size = memory_size
+        #神经网络学习数据输入一批量处理
         self.batch_size = batch_size
         self.epsilon_increment = e_greedy_increment
         self.epsilon = 0 if e_greedy_increment is not None else self.epsilon_max
-
-        # total learning step
+        #提高学习量
         self.learn_step_counter = 0
-
-        # initialize zero memory [s, a, r, s_]
+        #初始化后记忆库 [s, a, r, s_]
+        #记忆库，例如记忆200条长度。
         self.memory = np.zeros((self.memory_size, n_features * 2 + 2))
-
-        # consist of [target_net, evaluate_net]
+        #创建两个神经网络 [target_net, evaluate_net]，通过异步来阻断qtable更新，降低不收敛可能性
         self._build_net()
-
+        #target神经网络变量集合，便于复制参数
         t_params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='target_net')
+        #eval神经网络变量集合，便于复制参数
         e_params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='eval_net')
-
         with tf.variable_scope('soft_replacement'):
             self.target_replace_op = [tf.assign(t, e) for t, e in zip(t_params, e_params)]
-
+        #启动tensorflow session
         self.sess = tf.Session()
-
-        if output_graph:
-            # $ tensorboard --logdir=logs
-            tf.summary.FileWriter("dist/dqn/logs/", self.sess.graph)
-
+        #存储dqn的训练过程
+        tf.summary.FileWriter("dist/dqn/logs/", self.sess.graph)
+        #初始化神经网络变量
         self.sess.run(tf.global_variables_initializer())
+        #记录每一步的误差，用于观测绘制误差矩阵
         self.cost_his = []
 
     def _build_net(self):
@@ -88,7 +93,14 @@ class DeepQNetwork:
             self.loss = tf.reduce_mean(tf.squared_difference(self.q_target, self.q_eval_wrt_a, name='TD_error'))
         with tf.variable_scope('train'):
             self._train_op = tf.train.RMSPropOptimizer(self.lr).minimize(self.loss)
-
+    """
+    存储transition,
+    Attributes:
+    s:当前的预测值(observation)
+    a:动作
+    r：奖励
+    s_:下一次的预测值(observation)
+    """
     def store_transition(self, s, a, r, s_):
         if not hasattr(self, 'memory_counter'):
             self.memory_counter = 0
