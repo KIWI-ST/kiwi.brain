@@ -5,8 +5,13 @@ np.random.seed(1)
 tf.set_random_seed(1)
 
 
-# Deep Q Network off-policy
+#构建DNQ的state网络
 class DeepQNetwork:
+    """构建QTable的神经网络state记录器.
+    Args:
+        n_actions:output 输出类别.
+        n_features:input 输入神经元个数.
+    """
     def __init__(
             self,
             n_actions,
@@ -18,7 +23,7 @@ class DeepQNetwork:
             memory_size=500,
             batch_size=32,
             e_greedy_increment=None,
-            output_graph=False,
+            output_graph=True,
     ):
         #神经网络output，即为分类种类数目
         self.n_actions = n_actions
@@ -28,7 +33,7 @@ class DeepQNetwork:
         self.lr = learning_rate
         #Q(s,a)函数学习率
         self.gamma = reward_decay
-        #随机选择action
+        #探索度，选择指定值的比率
         self.epsilon_max = e_greedy
         #阻断两个网络的学习间隔，即(replace_target_iter步后，将神经网络参数替换到taget_network)
         self.replace_target_iter = replace_target_iter
@@ -94,7 +99,8 @@ class DeepQNetwork:
         with tf.variable_scope('train'):
             self._train_op = tf.train.RMSPropOptimizer(self.lr).minimize(self.loss)
     """
-    存储transition,
+    存储记忆
+    ,
     Attributes:
     s:当前的预测值(observation)
     a:动作
@@ -105,7 +111,7 @@ class DeepQNetwork:
         if not hasattr(self, 'memory_counter'):
             self.memory_counter = 0
         transition = np.hstack((s, [a, r], s_))
-        # replace the old memory with new memory
+        #使用心得memory替换旧的内容
         index = self.memory_counter % self.memory_size
         self.memory[index, :] = transition
         self.memory_counter += 1
@@ -134,7 +140,7 @@ class DeepQNetwork:
         else:
             sample_index = np.random.choice(self.memory_counter, size=self.batch_size)
         batch_memory = self.memory[sample_index, :]
-
+        #损失函数
         _, cost = self.sess.run(
             [self._train_op, self.loss],
             feed_dict={
@@ -143,10 +149,9 @@ class DeepQNetwork:
                 self.r: batch_memory[:, self.n_features + 1],
                 self.s_: batch_memory[:, -self.n_features:],
             })
-
+        #记录误差，用于监测结果与图表绘制
         self.cost_his.append(cost)
-
-        # increasing epsilon
+        #
         self.epsilon = self.epsilon + self.epsilon_increment if self.epsilon < self.epsilon_max else self.epsilon_max
         self.learn_step_counter += 1
 
@@ -158,4 +163,4 @@ class DeepQNetwork:
         plt.show()
 
 if __name__ == '__main__':
-    DQN = DeepQNetwork(3,4, output_graph=True)
+    DQN = DeepQNetwork(3,4)

@@ -120,3 +120,6 @@ class Env(object):
     def render(self):
         # time.sleep(0.01)
         self.update()
+
+if __name__ == '__main__':
+    Environment = Env()
