@@ -1,47 +1,45 @@
 import numpy as np
 import time
 import sys
-if sys.version_info.major == 2:
-    import Tkinter as tk
-else:
-    import tkinter as tk
+import tkinter as tk
 
 UNIT = 40   # pixels
-MAZE_H = 4  # grid height
-MAZE_W = 4  # grid width
+FORM_H = 4  # grid height
+FORM_W = 4  # grid width
 
 
-class Env(object):
+class Env(tk.Tk, object):
     def __init__(self):
         super(Env, self).__init__()
+        #定义GUI标题
+        self.title('分类器')
         #定义分类动作
-        self.action_space = ['yellow', 'red', 'back', 'white', 'gray', 'green', 'orange']
+        self.action_space = ['yellow', 'red', 'back',
+                             'white', 'gray', 'green', 'orange']
         #记录分类动作总数
         self.n_actions = len(self.action_space)
         #定义神经网络输入单元参数个数
-        self.n_features = 2
-        #定义类型图形界面顶部title 
-        #self.title('maze')
-        self.geometry('{0}x{1}'.format(MAZE_H * UNIT, MAZE_H * UNIT))
+        self.n_features = 10
+        #设定窗口大小
+        self.geometry('{0}x{1}'.format(FORM_H * UNIT, FORM_H * UNIT))
+        #初始化
         self._build_maze()
 
+    #初始化GUI窗口，用于可视化训练界面
     def _build_maze(self):
-        self.canvas = tk.Canvas(self, bg='white',
-                                height=MAZE_H * UNIT,
-                                width=MAZE_W * UNIT)
-
-        # create grids
-        for c in range(0, MAZE_W * UNIT, UNIT):
-            x0, y0, x1, y1 = c, 0, c, MAZE_H * UNIT
+        #创建绘制画布
+        self.canvas = tk.Canvas(
+            self, bg='white', height=FORM_H * UNIT, width=FORM_W * UNIT)
+        #绘制矩形格网
+        for c in range(0, FORM_W * UNIT, UNIT):
+            x0, y0, x1, y1 = c, 0, c, FORM_H * UNIT
             self.canvas.create_line(x0, y0, x1, y1)
-        for r in range(0, MAZE_H * UNIT, UNIT):
-            x0, y0, x1, y1 = 0, r, MAZE_H * UNIT, r
+        for r in range(0, FORM_H * UNIT, UNIT):
+            x0, y0, x1, y1 = 0, r, FORM_H * UNIT, r
             self.canvas.create_line(x0, y0, x1, y1)
-
         # create origin
         origin = np.array([20, 20])
-
-        # hell
+        #洞区
         hell1_center = origin + np.array([UNIT * 2, UNIT])
         self.hell1 = self.canvas.create_rectangle(
             hell1_center[0] - 15, hell1_center[1] - 15,
@@ -80,7 +78,7 @@ class Env(object):
             origin[0] + 15, origin[1] + 15,
             fill='red')
         # return observation
-        return (np.array(self.canvas.coords(self.rect)[:2]) - np.array(self.canvas.coords(self.oval)[:2]))/(MAZE_H*UNIT)
+        return (np.array(self.canvas.coords(self.rect)[:2]) - np.array(self.canvas.coords(self.oval)[:2]))/(FORM_H*UNIT)
 
     def step(self, action):
         s = self.canvas.coords(self.rect)
@@ -89,10 +87,10 @@ class Env(object):
             if s[1] > UNIT:
                 base_action[1] -= UNIT
         elif action == 1:   # down
-            if s[1] < (MAZE_H - 1) * UNIT:
+            if s[1] < (FORM_H - 1) * UNIT:
                 base_action[1] += UNIT
         elif action == 2:   # right
-            if s[0] < (MAZE_W - 1) * UNIT:
+            if s[0] < (FORM_W - 1) * UNIT:
                 base_action[0] += UNIT
         elif action == 3:   # left
             if s[0] > UNIT:
@@ -114,12 +112,18 @@ class Env(object):
             reward = 0
             done = False
         s_ = (np.array(
-            next_coords[:2]) - np.array(self.canvas.coords(self.oval)[:2]))/(MAZE_H*UNIT)
+            next_coords[:2]) - np.array(self.canvas.coords(self.oval)[:2]))/(FORM_H*UNIT)
         return s_, reward, done
 
-    def render(self):
+    def update(self):
         # time.sleep(0.01)
         self.update()
 
+
 if __name__ == '__main__':
+    #初始化环境
     Environment = Env()
+    #执行UI消息监听
+    Environment.mainloop()
+    #更新UI
+    Environment.update()
