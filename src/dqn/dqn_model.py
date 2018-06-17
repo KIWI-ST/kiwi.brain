@@ -116,6 +116,7 @@ class DeepQNetwork:
         self.memory[index, :] = transition
         self.memory_counter += 1
 
+    #观测值
     def choose_action(self, observation):
         # to have batch dimension when feed into tf placeholder
         observation = observation[np.newaxis, :]

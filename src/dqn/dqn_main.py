@@ -2,14 +2,14 @@ from dqn_env import Env
 from dqn_model import DeepQNetwork
 
 #创建memory区，用于训练
-def run_maze():
+def setup_memory():
     step = 0
     for episode in range(300):
         # initial observation
         observation = env.reset()
         while True:
             # fresh env
-            env.update()
+            env.render()
             # RL choose action based on observation
             action = RL.choose_action(observation)
             # RL take action and get next observation and reward
@@ -30,7 +30,7 @@ def run_maze():
 
 if __name__ == "__main__":
     # maze game
-    env = Maze()
+    env = Env()
     RL = DeepQNetwork(env.n_actions,
                       env.n_features,
                       learning_rate=0.01,
@@ -38,6 +38,6 @@ if __name__ == "__main__":
                       e_greedy=0.9,
                       replace_target_iter=200,
                       memory_size=2000)
-    env.after(100, run_maze)
+    env.after(100, setup_memory)
     env.mainloop()
     RL.plot_cost()
