@@ -7,8 +7,8 @@ UNIT = 40   # pixels
 FORM_H = 4  # grid height
 FORM_W = 4  # grid width
 
-WINDOW_W = 800
-WINDOW_H = 600
+WINDOW_W = 800 #env width
+WINDOW_H = 600  #env height
 
 class Env(tk.Tk, object):
     def __init__(self):
