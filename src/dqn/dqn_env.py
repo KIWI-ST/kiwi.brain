@@ -128,5 +128,5 @@ if __name__ == '__main__':
     Environment = Env()
     #执行UI消息监听
     Environment.mainloop()
-    #更新UI
+    #更新UI,用于ob获取reward
     Environment.render()
